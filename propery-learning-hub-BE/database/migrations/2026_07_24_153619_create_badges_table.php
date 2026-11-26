@@ -1,0 +1,50 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('badges', function (Blueprint $table) {
+            $table->id();
+            $table->string('key')->unique(); // e.g., 'daily_login_7', 'course_completion_first'
+            $table->string('title');
+            $table->text('description');
+            $table->string('icon')->default('🏆');
+            $table->enum('category', ['learning', 'achievement', 'community', 'investment']);
+            $table->enum('tier', ['bronze', 'silver', 'gold', 'platinum']);
+            $table->json('requirements')->nullable(); // What's needed to earn this
+            $table->integer('points')->default(10);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('user_badges', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('badge_id')->constrained()->onDelete('cascade');
+            $table->timestamp('earned_at');
+            $table->json('metadata')->nullable(); 
+            $table->timestamps();
+            
+            $table->unique(['user_id', 'badge_id']);
+            $table->index(['user_id', 'earned_at']);
+        });
+    
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+       Schema::dropIfExists('user_badges');
+        Schema::dropIfExists('badges');
+    }
+};
